@@ -1,0 +1,2 @@
+🧾 Statut reçu : 401
+⚠️ Accès non autorisé à la suppression (réponse 401).

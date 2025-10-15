@@ -1,0 +1,73 @@
+name: 🚀 CI - Tests Automatisés Selenium (Python 3.14)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Étape 1 : Récupération du code
+      - name: 🔄 Checkout du code
+        uses: actions/checkout@v4
+
+      # Étape 2 : Installation manuelle de Python 3.14
+      - name: 🐍 Installation de Python 3.14
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget build-essential libssl-dev zlib1g-dev \
+              libncurses5-dev libncursesw5-dev libreadline-dev libsqlite3-dev \
+              libgdbm-dev libdb5.3-dev libbz2-dev libexpat1-dev liblzma-dev tk-dev
+          wget https://www.python.org/ftp/python/3.14.0/Python-3.14.0.tgz
+          tar -xvf Python-3.14.0.tgz
+          cd Python-3.14.0
+          ./configure --enable-optimizations
+          make -j 4
+          sudo make altinstall
+          python3.14 --version
+
+      # Étape 3 : Installation des dépendances
+      - name: 📦 Installation des dépendances
+        run: |
+          python3.14 -m pip install --upgrade pip
+          python3.14 -m pip install -r requirements.txt
+          python3.14 -m pip install allure-pytest
+
+      # Étape 4 : Installation de Google Chrome et WebDriver
+      - name: 🧩 Installation de Chrome et ChromeDriver
+        run: |
+          sudo apt-get install -y wget unzip xvfb
+          wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+          sudo apt install -y ./google-chrome-stable_current_amd64.deb
+          DRIVER_VERSION=$(curl -s "https://googlechromelabs.github.io/chrome-for-testing/LATEST_RELEASE_STABLE")
+          wget https://storage.googleapis.com/chrome-for-testing-public/${DRIVER_VERSION}/linux64/chromedriver-linux64.zip
+          unzip chromedriver-linux64.zip
+          sudo mv chromedriver-linux64/chromedriver /usr/local/bin/
+          chromedriver --version
+
+      # Étape 5 : Exécution des tests Pytest
+      - name: 🧪 Lancement des tests Pytest (Headless)
+        run: |
+          export PYTHONPATH=$(pwd)
+          xvfb-run -a python3.14 -m pytest --alluredir=reports/
+
+      # Étape 6 : Génération du rapport Allure
+      - name: 📊 Génération du rapport Allure
+        uses: simple-elf/allure-report-action@v1.8
+        with:
+          allure_results: reports/
+          allure_report: reports/allure-report
+          allure_history: allure-history
+        if: always()
+
+      # Étape 7 : Publication du rapport Allure sur GitHub Pages
+      - name: 🚀 Déploiement du rapport Allure
+        uses: peaceiris/actions-gh-pages@v3
+        if: always()
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: allure-history

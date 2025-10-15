@@ -1,0 +1,2 @@
+🧾 Statut reçu : 401
+⚠️ Accès non autorisé (réponse 401 attendue sur l'API publique).
