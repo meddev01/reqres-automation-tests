@@ -1,0 +1,37 @@
+stages:
+  - test
+
+variables:
+  PYTHON_VERSION: "3.10"
+
+before_script:
+  - apt-get update -qy
+  - apt-get install -y python3 python3-pip
+  - pip install --upgrade pip
+  - pip install selenium pytest requests pytest-html
+
+test_ui:
+  stage: test
+  image: python:3.10
+  script:
+    - echo "🚀 Lancement des tests UI avec Selenium"
+    - pytest -m ui --html=reports/ui_report.html --self-contained-html
+  artifacts:
+    paths:
+      - reports/ui_report.html
+    expire_in: 1 week
+  tags:
+    - docker
+
+test_api:
+  stage: test
+  image: python:3.10
+  script:
+    - echo "🚀 Lancement des tests API"
+    - pytest -m api --html=reports/api_report.html --self-contained-html
+  artifacts:
+    paths:
+      - reports/api_report.html
+    expire_in: 1 week
+  tags:
+    - docker
