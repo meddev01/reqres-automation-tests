@@ -2,7 +2,6 @@ pipeline {
     agent any
 
     environment {
-        PYTHON_ENV = '.venv\\Scripts\\activate'
         REPORT_DIR = 'reports'
         GITHUB_URL = 'https://github.com/meddev01/reqres-automation-tests.git'
     }
@@ -18,9 +17,10 @@ pipeline {
 
         stage('Installation des dépendances') {
             steps {
-                echo '📦 Installation des dépendances Python et Newman...'
+                echo '📦 Installation de l’environnement Python et des dépendances...'
                 bat """
-                call ${PYTHON_ENV}
+                python -m venv .venv
+                call .venv\\Scripts\\activate
                 pip install -r requirements.txt
                 npm install -g newman
                 """
@@ -31,7 +31,7 @@ pipeline {
             steps {
                 echo '🧪 Exécution des tests UI automatisés...'
                 bat """
-                call ${PYTHON_ENV}
+                call .venv\\Scripts\\activate
                 if not exist ${REPORT_DIR} mkdir ${REPORT_DIR}
                 pytest --html=${REPORT_DIR}\\ui_report.html --self-contained-html || exit 0
                 """
@@ -54,7 +54,6 @@ pipeline {
             steps {
                 echo '🌐 Exécution des tests API avec Newman...'
                 bat """
-                call ${PYTHON_ENV}
                 if not exist ${REPORT_DIR} mkdir ${REPORT_DIR}
                 newman run tests_api\\postman_collection.json --reporters cli,html --reporter-html-export ${REPORT_DIR}\\api_report.html || exit 0
                 """
